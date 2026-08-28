@@ -1,69 +1,270 @@
-import Image from "next/image";
+import {
+  BarChart3,
+  Boxes,
+  CircleDollarSign,
+  LayoutDashboard,
+  Menu,
+  Package,
+  ReceiptText,
+  Search,
+  Settings,
+  ShoppingCart,
+  Smartphone,
+  TrendingUp,
+  TriangleAlert,
+  Users,
+  WalletCards,
+  Wrench,
+} from "lucide-react";
+
+const menuItems = [
+  { name: "Dashboard", icon: LayoutDashboard, active: true },
+  { name: "POS Billing", icon: ShoppingCart },
+  { name: "Repairs", icon: Wrench },
+  { name: "Products", icon: Package },
+  { name: "Inventory", icon: Boxes },
+  { name: "Purchases", icon: ReceiptText },
+  { name: "Customers", icon: Users },
+  { name: "Expenses", icon: WalletCards },
+  { name: "Reports", icon: BarChart3 },
+  { name: "Settings", icon: Settings },
+];
+
+const summaryCards = [
+  {
+    title: "Today's Sales",
+    value: "LKR 128,450",
+    note: "18 completed bills",
+    icon: CircleDollarSign,
+    iconStyle: "bg-blue-50 text-blue-600",
+  },
+  {
+    title: "Repair Income",
+    value: "LKR 42,500",
+    note: "7 completed repairs",
+    icon: Wrench,
+    iconStyle: "bg-violet-50 text-violet-600",
+  },
+  {
+    title: "Today's Expenses",
+    value: "LKR 18,200",
+    note: "5 expense entries",
+    icon: WalletCards,
+    iconStyle: "bg-orange-50 text-orange-600",
+  },
+  {
+    title: "Estimated Profit",
+    value: "LKR 61,850",
+    note: "Sales and repairs",
+    icon: TrendingUp,
+    iconStyle: "bg-emerald-50 text-emerald-600",
+  },
+];
+
+const repairStatuses = [
+  { name: "Received", count: 8, color: "bg-blue-500" },
+  { name: "In Progress", count: 5, color: "bg-amber-500" },
+  { name: "Waiting for Parts", count: 3, color: "bg-violet-500" },
+  { name: "Ready to Deliver", count: 6, color: "bg-emerald-500" },
+];
+
+const lowStockItems = [
+  { name: "iPhone 13 Tempered Glass", stock: 3 },
+  { name: "Type-C Fast Charger", stock: 2 },
+  { name: "Samsung A15 Display", stock: 1 },
+  { name: "Universal TV Remote", stock: 4 },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-slate-950 text-white lg:flex">
+        <div className="flex h-20 items-center gap-3 border-b border-slate-800 px-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600">
+            <Smartphone size={22} />
+          </div>
+
+          <div>
+            <h1 className="font-bold">InfoAxon POS</h1>
+            <p className="text-xs text-slate-400">Repair & Retail System</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <nav className="flex-1 space-y-1 px-3 py-6">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <button
+                key={item.name}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${
+                  item.active
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                }`}
+              >
+                <Icon size={19} />
+                {item.name}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-slate-800 p-4">
+          <div className="rounded-xl bg-slate-900 p-4">
+            <p className="text-sm font-semibold">Main Branch</p>
+            <p className="mt-1 text-xs text-slate-400">
+              Administrator account
+            </p>
+          </div>
         </div>
-      </main>
-    </div>
+      </aside>
+
+      <section className="lg:pl-64">
+        <header className="flex h-20 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-8">
+          <div className="flex items-center gap-4">
+            <button className="rounded-lg border border-slate-200 p-2 lg:hidden">
+              <Menu size={20} />
+            </button>
+
+            <div>
+              <h2 className="text-xl font-bold">Business Dashboard</h2>
+              <p className="hidden text-sm text-slate-500 sm:block">
+                Friday, 28 August 2026
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button className="hidden items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-600 sm:flex">
+              <Search size={17} />
+              Search
+            </button>
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">
+              AD
+            </div>
+          </div>
+        </header>
+
+        <div className="p-4 sm:p-8">
+          <section className="mb-8 flex flex-col justify-between gap-5 rounded-2xl bg-gradient-to-r from-blue-700 to-blue-500 p-6 text-white sm:flex-row sm:items-center">
+            <div>
+              <p className="text-sm text-blue-100">
+                Welcome back, Administrator
+              </p>
+              <h3 className="mt-1 text-2xl font-bold">
+                Ready to manage today's business?
+              </h3>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-blue-700">
+                New POS Sale
+              </button>
+
+              <button className="rounded-xl bg-blue-800/50 px-5 py-3 text-sm font-semibold ring-1 ring-white/30">
+                New Repair Job
+              </button>
+            </div>
+          </section>
+
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {summaryCards.map((card) => {
+              const Icon = card.icon;
+
+              return (
+                <article
+                  key={card.title}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">
+                        {card.title}
+                      </p>
+                      <h3 className="mt-2 text-2xl font-bold">{card.value}</h3>
+                    </div>
+
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl ${card.iconStyle}`}
+                    >
+                      <Icon size={21} />
+                    </div>
+                  </div>
+
+                  <p className="mt-4 text-xs text-slate-500">{card.note}</p>
+                </article>
+              );
+            })}
+          </section>
+
+          <section className="mt-8 grid gap-6 xl:grid-cols-3">
+            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+              <div className="mb-6">
+                <h3 className="font-bold">Repair Job Overview</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Current repair workload and progress
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {repairStatuses.map((status) => (
+                  <div
+                    key={status.name}
+                    className="rounded-xl border border-slate-200 p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`h-3 w-3 rounded-full ${status.color}`}
+                        />
+                        <p className="text-sm font-medium">{status.name}</p>
+                      </div>
+
+                      <span className="text-2xl font-bold">
+                        {status.count}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold">Low Stock Alerts</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Items requiring attention
+                  </p>
+                </div>
+
+                <div className="rounded-lg bg-red-50 p-2 text-red-600">
+                  <TriangleAlert size={20} />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {lowStockItems.map((item) => (
+                  <div
+                    key={item.name}
+                    className="border-b border-slate-100 pb-4 last:border-0"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <p className="text-sm font-medium">{item.name}</p>
+
+                      <span className="rounded-lg bg-red-50 px-2 py-1 text-xs font-bold text-red-600">
+                        {item.stock} left
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </section>
+        </div>
+      </section>
+    </main>
   );
 }
