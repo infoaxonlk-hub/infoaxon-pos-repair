@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Barcode, Package, Plus } from "lucide-react";
+import { ArrowLeft, Barcode, Package, Pencil, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 function formatCurrency(value: number | string | null) {
@@ -115,6 +115,7 @@ export default async function ProductsPage() {
                     <th className="px-6 py-4">Selling Price</th>
                     <th className="px-6 py-4">Minimum Stock</th>
                     <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Actions</th>
                   </tr>
                 </thead>
 
@@ -171,6 +172,15 @@ export default async function ProductsPage() {
                           {product.active ? "Active" : "Inactive"}
                         </span>
                       </td>
+                      <td className="px-6 py-4">
+  <Link
+    href={`/products/${product.id}/edit`}
+    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+  >
+    <Pencil size={15} />
+    Edit
+  </Link>
+</td>
                     </tr>
                   ))}
                 </tbody>
