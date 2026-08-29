@@ -16,6 +16,7 @@ import {
   WalletCards,
   Wrench,
 } from "lucide-react";
+import { LogoutButton } from "./logout-button";
 
 const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, active: true },
@@ -140,6 +141,8 @@ export default function Home() {
               <Search size={17} />
               Search
             </button>
+            <LogoutButton />
+          
 
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">
               AD
