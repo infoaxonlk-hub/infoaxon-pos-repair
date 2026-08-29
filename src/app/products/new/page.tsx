@@ -65,8 +65,7 @@ export default function NewProductPage() {
       return;
     }
 
-    router.push("/products");
-    router.refresh();
+   window.location.href = "/products";
   }
 
   const inputClass =

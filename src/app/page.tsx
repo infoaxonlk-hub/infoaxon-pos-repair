@@ -16,19 +16,20 @@ import {
   WalletCards,
   Wrench,
 } from "lucide-react";
+import Link from "next/link";
 import { LogoutButton } from "./logout-button";
 
 const menuItems = [
-  { name: "Dashboard", icon: LayoutDashboard, active: true },
-  { name: "POS Billing", icon: ShoppingCart },
-  { name: "Repairs", icon: Wrench },
-  { name: "Products", icon: Package },
-  { name: "Inventory", icon: Boxes },
-  { name: "Purchases", icon: ReceiptText },
-  { name: "Customers", icon: Users },
-  { name: "Expenses", icon: WalletCards },
-  { name: "Reports", icon: BarChart3 },
-  { name: "Settings", icon: Settings },
+  { name: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
+  { name: "POS Billing", icon: ShoppingCart, href: "#" },
+  { name: "Repairs", icon: Wrench, href: "#" },
+  { name: "Products", icon: Package, href: "/products" },
+  { name: "Inventory", icon: Boxes, href: "#" },
+  { name: "Purchases", icon: ReceiptText, href: "#" },
+  { name: "Customers", icon: Users, href: "#" },
+  { name: "Expenses", icon: WalletCards, href: "#" },
+  { name: "Reports", icon: BarChart3, href: "#" },
+  { name: "Settings", icon: Settings, href: "#" },
 ];
 
 const summaryCards = [
@@ -96,8 +97,9 @@ export default function Home() {
             const Icon = item.icon;
 
             return (
-              <button
+              <Link
                 key={item.name}
+                href={item.href}
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${
                   item.active
                     ? "bg-blue-600 text-white"
@@ -106,7 +108,7 @@ export default function Home() {
               >
                 <Icon size={19} />
                 {item.name}
-              </button>
+              </Link>
             );
           })}
         </nav>
