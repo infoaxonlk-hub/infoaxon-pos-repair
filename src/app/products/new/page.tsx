@@ -1,18 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, PackagePlus, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+type Category = {
+  id: string;
+  name: string;
+};
 export default function NewProductPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+const [categoryId, setCategoryId] = useState("");
+useEffect(() => {
+  async function loadCategories() {
+    const supabase = createClient();
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("business_id")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile) return;
+
+    const { data } = await supabase
+      .from("product_categories")
+      .select("id, name")
+      .eq("business_id", profile.business_id)
+      .eq("active", true)
+      .order("name");
+
+    setCategories(data ?? []);
+  }
+
+  loadCategories();
+}, []);
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {event.preventDefault();
     setSaving(true);
     setError("");
 
@@ -42,6 +76,7 @@ export default function NewProductPage() {
 
     const { error: insertError } = await supabase.from("products").insert({
       business_id: profile.business_id,
+      category_id: categoryId || null,
       name: String(formData.get("name") || "").trim(),
       sku: String(formData.get("sku") || "").trim(),
       barcode: String(formData.get("barcode") || "").trim() || null,
@@ -114,7 +149,21 @@ export default function NewProductPage() {
                   className={inputClass}
                 />
               </label>
-
+<label className="text-sm font-semibold text-slate-700">
+  Category
+  <select
+    value={categoryId}
+    onChange={(event) => setCategoryId(event.target.value)}
+    className={inputClass}
+  >
+    <option value="">Select a category</option>
+    {categories.map((category) => (
+      <option key={category.id} value={category.id}>
+        {category.name}
+      </option>
+    ))}
+  </select>
+</label>
               <label className="text-sm font-semibold text-slate-700">
                 SKU *
                 <input

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Barcode, Package, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Barcode, FolderTree, Package, Pencil, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 function formatCurrency(value: number | string | null) {
@@ -25,9 +25,21 @@ export default async function ProductsPage() {
 
   const { data: products, error } = await supabase
     .from("products")
-    .select(
-      "id, name, sku, barcode, product_type, brand, model, unit_name, cost_price, selling_price, minimum_stock, active",
-    )
+    .select(`
+  id,
+  name,
+  sku,
+  barcode,
+  product_type,
+  brand,
+  model,
+  unit_name,
+  cost_price,
+  selling_price,
+  minimum_stock,
+  active,
+  product_categories(name)
+`)
     .eq("business_id", profile!.business_id)
     .order("name");
 
@@ -50,13 +62,23 @@ export default async function ProductsPage() {
             </p>
           </div>
 
-         <Link
-  href="/products/new"
-  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700"
->
-  <Plus size={19} />
-  New Product
-</Link>
+         <div className="flex flex-col gap-3 sm:flex-row">
+  <Link
+    href="/products/categories"
+    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+  >
+    <FolderTree size={19} />
+    Categories
+  </Link>
+
+  <Link
+    href="/products/new"
+    className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700"
+  >
+    <Plus size={19} />
+    New Product
+  </Link>
+</div>
         </header>
 
         <section className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -109,6 +131,7 @@ export default async function ProductsPage() {
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-6 py-4">Product</th>
+                    <th className="px-6 py-4">Category</th>
                     <th className="px-6 py-4">SKU / Barcode</th>
                     <th className="px-6 py-4">Type</th>
                     <th className="px-6 py-4">Cost Price</th>
@@ -132,7 +155,11 @@ export default async function ProductsPage() {
                             .join(" ") || "No brand or model"}
                         </p>
                       </td>
-
+<td className="px-6 py-4">
+  <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+    {product.product_categories?.[0]?.name ?? "Uncategorized"}
+  </span>
+</td>
                       <td className="px-6 py-4">
                         <p className="font-medium text-slate-700">
                           {product.sku}
