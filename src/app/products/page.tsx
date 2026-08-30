@@ -38,7 +38,7 @@ export default async function ProductsPage() {
   selling_price,
   minimum_stock,
   active,
-  product_categories(name)
+  category:product_categories!products_category_business_fk(name)
 `)
     .eq("business_id", profile!.business_id)
     .order("name");
@@ -157,7 +157,8 @@ export default async function ProductsPage() {
                       </td>
 <td className="px-6 py-4">
   <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-    {product.product_categories?.[0]?.name ?? "Uncategorized"}
+    {(product.category as unknown as { name: string } | null)?.name ??
+  "Uncategorized"}
   </span>
 </td>
                       <td className="px-6 py-4">

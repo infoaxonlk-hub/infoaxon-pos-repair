@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type ProductForm = {
   name: string;
+  category_id: string;
   sku: string;
   barcode: string;
   product_type: string;
@@ -22,9 +23,13 @@ type ProductForm = {
   description: string;
   active: boolean;
 };
-
+type Category = {
+  id: string;
+  name: string;
+};
 const emptyProduct: ProductForm = {
   name: "",
+  category_id: "",
   sku: "",
   barcode: "",
   product_type: "stockable",
@@ -45,6 +50,7 @@ export default function EditProductPage() {
   const productId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [product, setProduct] = useState<ProductForm>(emptyProduct);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -56,7 +62,7 @@ export default function EditProductPage() {
       const { data, error: loadError } = await supabase
         .from("products")
         .select(
-          "name, sku, barcode, product_type, brand, model, unit_name, cost_price, selling_price, minimum_stock, track_serial_number, allow_price_change, description, active",
+          "category_id, name, sku, barcode, product_type, brand, model, unit_name, cost_price, selling_price, minimum_stock, track_serial_number, allow_price_change, description, active",
         )
         .eq("id", productId)
         .single();
@@ -69,6 +75,7 @@ export default function EditProductPage() {
 
       setProduct({
         name: data.name,
+        category_id: data.category_id || "",
         sku: data.sku,
         barcode: data.barcode || "",
         product_type: data.product_type,
@@ -91,7 +98,36 @@ export default function EditProductPage() {
       loadProduct();
     }
   }, [productId]);
+useEffect(() => {
+  async function loadCategories() {
+    const supabase = createClient();
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("business_id")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile) return;
+
+    const { data } = await supabase
+      .from("product_categories")
+      .select("id, name")
+      .eq("business_id", profile.business_id)
+      .eq("active", true)
+      .order("name");
+
+    setCategories(data ?? []);
+  }
+
+  loadCategories();
+}, []);
   function updateField<K extends keyof ProductForm>(
     field: K,
     value: ProductForm[K],
@@ -113,6 +149,7 @@ export default function EditProductPage() {
       .from("products")
       .update({
         name: product.name.trim(),
+        category_id: product.category_id || null,
         sku: product.sku.trim(),
         barcode: product.barcode.trim() || null,
         product_type: product.product_type,
@@ -187,7 +224,21 @@ export default function EditProductPage() {
                   className={inputClass}
                 />
               </label>
-
+<label className="text-sm font-semibold text-slate-700">
+  Category
+  <select
+    value={product.category_id}
+    onChange={(event) => updateField("category_id", event.target.value)}
+    className={inputClass}
+  >
+    <option value="">Select a category</option>
+    {categories.map((category) => (
+      <option key={category.id} value={category.id}>
+        {category.name}
+      </option>
+    ))}
+  </select>
+</label>
               <label className="text-sm font-semibold text-slate-700">
                 SKU *
                 <input
