@@ -26,7 +26,7 @@ const menuItems = [
   { name: "Products", icon: Package, href: "/products" },
   { name: "Inventory", icon: Boxes, href: "#" },
   { name: "Purchases", icon: ReceiptText, href: "#" },
-  { name: "Customers", icon: Users, href: "#" },
+  { name: "Customers", icon: Users, href: "/customers" },
   { name: "Expenses", icon: WalletCards, href: "#" },
   { name: "Reports", icon: BarChart3, href: "#" },
   { name: "Settings", icon: Settings, href: "#" },
