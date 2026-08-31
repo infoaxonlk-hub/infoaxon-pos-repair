@@ -136,7 +136,7 @@ export default function Home() {
             <div>
               <h2 className="text-xl font-bold">Business Dashboard</h2>
               <p className="hidden text-sm text-slate-500 sm:block">
-                Friday, 28 August 2026
+                {new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "Asia/Colombo" }).format(new Date())}
               </p>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function Home() {
             })}
           </section>
 
-          <section className="mt-8 grid gap-6 xl:grid-cols-3">
+          <section className="hidden">
             <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
               <div className="mb-6">
                 <h3 className="font-bold">Repair Job Overview</h3>
