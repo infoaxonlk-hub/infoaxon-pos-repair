@@ -19,19 +19,20 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { LogoutButton } from "./logout-button";
-
+import { DashboardLiveSummary } from "./dashboard-live-summary";
 const menuItems = [
   { name: "Dashboard", icon: LayoutDashboard, href: "/", active: true },
-  { name: "POS Billing", icon: ShoppingCart, href: "#" },
-  { name: "Repairs", icon: Wrench, href: "#" },
+  { name: "POS Billing", icon: ShoppingCart, href: "/pos" },
+  { name: "Repairs", icon: Wrench, href: "/repairs" },
   { name: "Products", icon: Package, href: "/products" },
   { name: "Inventory", icon: Boxes, href: "/inventory" },
   { name: "Purchases", icon: ReceiptText, href: "/purchases" },
   { name: "Customers", icon: Users, href: "/customers" },
   { name: "Suppliers", icon: Truck, href: "/suppliers" },
-  { name: "Expenses", icon: WalletCards, href: "#" },
-  { name: "Reports", icon: BarChart3, href: "#" },
-  { name: "Settings", icon: Settings, href: "#" },
+  { name: "Expenses", icon: WalletCards, href: "/expenses" },
+  { name: "Accounting", icon: WalletCards, href: "/accounting" },
+  { name: "Reports", icon: BarChart3, href: "/reports" },
+  { name: "Settings", icon: Settings, href: "/settings" },
 ];
 
 const summaryCards = [
@@ -166,18 +167,24 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-blue-700">
-                New POS Sale
-              </button>
+             <Link
+  href="/pos"
+  className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-blue-700"
+>
+  New POS Sale
+</Link>
 
-              <button className="rounded-xl bg-blue-800/50 px-5 py-3 text-sm font-semibold ring-1 ring-white/30">
-                New Repair Job
-              </button>
+             <Link
+  href="/repairs/new"
+  className="rounded-xl bg-blue-800/50 px-5 py-3 text-sm font-semibold ring-1 ring-white/30"
+>
+  New Repair Job
+</Link>
             </div>
           </section>
-
+<DashboardLiveSummary />
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {summaryCards.map((card) => {
+            {false && summaryCards.map((card) => {
               const Icon = card.icon;
 
               return (
