@@ -82,7 +82,16 @@ export default function SettingsPage() {
       <label className="mt-4 flex items-center gap-2"><input type="checkbox" checked={branchForm.active??true} onChange={e=>setBranchForm({...branchForm,active:e.target.checked})}/> Active</label>
       <button disabled={saving||role!=="admin"} className="mt-5 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white disabled:opacity-50">Save Branch</button>
     </form><section className="space-y-3">{branches.map(b=><article key={b.id} className="flex items-center justify-between rounded-2xl border bg-white p-5 shadow-sm"><div><h3 className="font-bold">{b.name}</h3><p className="text-sm text-slate-500">{b.code} · {b.active?"Active":"Inactive"}</p></div><button onClick={()=>setBranchForm(b)} className="rounded-lg border p-2"><Pencil size={18}/></button></article>)}</section></div>}
-
+{tab === "staff" && role === "admin" && (
+  <div className="mt-5 flex justify-end">
+    <Link
+      href="/settings/staff/new"
+      className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+    >
+      + Add Staff
+    </Link>
+  </div>
+)}
     {tab==="staff"&&<div className="mt-5 grid gap-5 lg:grid-cols-2"><section className="space-y-3">{staff.map(u=><article key={u.id} className="flex items-center justify-between rounded-2xl border bg-white p-5 shadow-sm"><div><h3 className="font-bold">{u.full_name}</h3><p className="text-sm capitalize text-slate-500">{u.role} · {u.active?"Active":"Inactive"}</p></div><button onClick={()=>setStaffForm(u)} className="rounded-lg border p-2"><Pencil size={18}/></button></article>)}</section>
       {staffForm?<form onSubmit={saveStaff} className="rounded-2xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Edit Staff</h2>
         <label className="mt-5 block font-semibold">Full Name<input className={field} value={staffForm.full_name} onChange={e=>setStaffForm({...staffForm,full_name:e.target.value})}/></label>
