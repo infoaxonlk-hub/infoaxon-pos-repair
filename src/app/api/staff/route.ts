@@ -3,184 +3,316 @@ import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-const allowedRoles = ["admin", "manager", "cashier", "technician"] as const;
-type StaffRole = (typeof allowedRoles)[number];
+const roles = ["admin", "manager", "cashier", "technician"];
 
-type CreateStaffBody = {
-  fullName?: string;
-  email?: string;
-  password?: string;
-  phone?: string;
-  role?: string;
-  branchId?: string | null;
-};
+const uuid =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function reply(error: string, status: number) {
+  return NextResponse.json(
+    { error },
+    {
+      status,
+      headers: { "Cache-Control": "private, no-store" },
+    },
+  );
+}
 
 export async function POST(request: Request) {
-  const cookieStore = await cookies();
+  try {
+    if (request.headers.get("sec-fetch-site") === "cross-site") {
+      return reply("Cross-site requests are not allowed.", 403);
+    }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
+    const contentType = request.headers
+      .get("content-type")
+      ?.split(";")[0]
+      .trim();
+
+    if (contentType !== "application/json") {
+      return reply("JSON request required.", 415);
+    }
+
+    const reader = request.body?.getReader();
+
+    if (!reader) {
+      return reply("Request body required.", 400);
+    }
+
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+
+    while (true) {
+      const { value, done } = await reader.read();
+
+      if (done) break;
+
+      size += value.byteLength;
+
+      if (size > 8192) {
+        await reader.cancel();
+        return reply("Request is too large.", 413);
+      }
+
+      chunks.push(value);
+    }
+
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    let raw: unknown;
+
+    try {
+      raw = JSON.parse(new TextDecoder().decode(bytes));
+    } catch {
+      return reply("Invalid JSON request.", 400);
+    }
+
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return reply("Invalid staff details.", 400);
+    }
+
+    const body = raw as Record<string, unknown>;
+
+    for (const key of ["fullName", "email", "password", "role"]) {
+      if (typeof body[key] !== "string") {
+        return reply("Invalid required fields.", 400);
+      }
+    }
+
+    for (const key of ["phone", "branchId"]) {
+      if (body[key] != null && typeof body[key] !== "string") {
+        return reply("Invalid optional fields.", 400);
+      }
+    }
+
+    const fullName = (body.fullName as string).trim();
+    const email = (body.email as string).trim().toLowerCase();
+    const password = body.password as string;
+    const role = body.role as string;
+    const phone = (body.phone as string | undefined)?.trim() || null;
+    const branchId =
+      (body.branchId as string | undefined)?.trim() || null;
+
+    if (!fullName || fullName.length > 120) {
+      return reply("Name must contain 1–120 characters.", 400);
+    }
+
+    if (
+      email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+      return reply("Enter a valid email address.", 400);
+    }
+
+    if (password.length < 8 || password.length > 128) {
+      return reply("Password must contain 8–128 characters.", 400);
+    }
+
+    if (!roles.includes(role)) {
+      return reply("Select a valid role.", 400);
+    }
+
+    if (phone && phone.length > 30) {
+      return reply("Phone must be at most 30 characters.", 400);
+    }
+
+    if (branchId && !uuid.test(branchId)) {
+      return reply("Select a valid branch.", 400);
+    }
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const publicKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    const secret = process.env.SUPABASE_SECRET_KEY;
+
+    if (!url || !publicKey || !secret) {
+      return reply("Staff service is not configured.", 503);
+    }
+
+    const jar = await cookies();
+
+    const client = createServerClient(url, publicKey, {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            // Cookie updates may be unavailable in some server contexts.
-          }
+        getAll: () => jar.getAll(),
+        setAll: (items) => {
+          items.forEach(({ name, value, options }) => {
+            jar.set(name, value, options);
+          });
         },
       },
-    },
-  );
+    });
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const { data: auth, error: authError } =
+      await client.auth.getUser();
 
-  if (userError || !user) {
-    return NextResponse.json(
-      { error: "You must sign in again." },
-      { status: 401 },
-    );
-  }
+    if (authError || !auth.user) {
+      return reply("Please sign in again.", 401);
+    }
 
-  const { data: administrator, error: administratorError } = await supabase
-    .from("profiles")
-    .select("business_id, role, active")
-    .eq("id", user.id)
-    .single();
+    const { data: actor, error: actorError } = await client
+      .from("profiles")
+      .select("business_id,role,active")
+      .eq("id", auth.user.id)
+      .single();
 
-  if (
-    administratorError ||
-    !administrator ||
-    administrator.role !== "admin" ||
-    administrator.active !== true
-  ) {
-    return NextResponse.json(
-      { error: "Only an active administrator can create staff accounts." },
-      { status: 403 },
-    );
-  }
-
-  let body: CreateStaffBody;
-
-  try {
-    body = (await request.json()) as CreateStaffBody;
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid request." },
-      { status: 400 },
-    );
-  }
-
-  const fullName = body.fullName?.trim() ?? "";
-  const email = body.email?.trim().toLowerCase() ?? "";
-  const password = body.password ?? "";
-  const phone = body.phone?.trim() || null;
-  const branchId = body.branchId?.trim() || null;
-  const role = body.role as StaffRole;
-
-  if (!fullName || !email || !password || !allowedRoles.includes(role)) {
-    return NextResponse.json(
-      { error: "Name, email, password and a valid role are required." },
-      { status: 400 },
-    );
-  }
-
-  if (password.length < 8) {
-    return NextResponse.json(
-      { error: "Password must contain at least 8 characters." },
-      { status: 400 },
-    );
-  }
-
-  if (branchId) {
-    const { data: branch, error: branchError } = await supabase
-      .from("branches")
-      .select("id")
-      .eq("id", branchId)
-      .eq("business_id", administrator.business_id)
-      .eq("active", true)
-      .maybeSingle();
-
-    if (branchError || !branch) {
-      return NextResponse.json(
-        { error: "Select a valid active branch." },
-        { status: 400 },
+    if (actorError) {
+      return reply(
+        "Could not verify staff permissions.",
+        actorError.code === "42501" ? 403 : 503,
       );
     }
-  }
 
-  const secretKey = process.env.SUPABASE_SECRET_KEY;
+    if (
+      !actor ||
+      actor.role !== "admin" ||
+      actor.active !== true
+    ) {
+      return reply(
+        "Only active administrators can add staff.",
+        403,
+      );
+    }
 
-  if (!secretKey) {
-    return NextResponse.json(
-      { error: "Staff account service is not configured." },
-      { status: 503 },
-    );
-  }
+    if (branchId) {
+      const { data: branch, error } = await client
+        .from("branches")
+        .select("id")
+        .eq("id", branchId)
+        .eq("business_id", actor.business_id)
+        .eq("active", true)
+        .maybeSingle();
 
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    secretKey,
-    {
+      if (error) {
+        return reply(
+          "Could not verify the branch. Try again later.",
+          503,
+        );
+      }
+
+      if (!branch) {
+        return reply(
+          "Select an active branch in your business.",
+          400,
+        );
+      }
+    }
+
+    const admin = createClient(url, secret, {
       auth: {
-        autoRefreshToken: false,
         persistSession: false,
+        autoRefreshToken: false,
       },
-    },
-  );
+    });
 
-  const { data: newAccount, error: accountError } =
-    await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
+    const { data: created, error: createError } =
+      await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: fullName },
+      });
+
+    if (createError) {
+      if (
+        ["email_exists", "user_already_exists"].includes(
+          createError.code ?? "",
+        )
+      ) {
+        return reply(
+          "That email is already registered. Use another email.",
+          409,
+        );
+      }
+
+      if (createError.code === "weak_password") {
+        return reply("Choose a stronger password.", 400);
+      }
+
+      if (createError.status === 429) {
+        return reply(
+          "Too many requests. Please wait before retrying.",
+          429,
+        );
+      }
+
+      return reply(
+        "Account creation failed. Check Staff and Authentication before retrying.",
+        503,
+      );
+    }
+
+    if (!created.user) {
+      return reply(
+        "Account creation was not confirmed. Contact your administrator.",
+        503,
+      );
+    }
+
+    const newId = created.user.id;
+    let saved = false;
+
+    try {
+      const { error } = await admin.from("profiles").insert({
+        id: newId,
+        business_id: actor.business_id,
+        branch_id: branchId,
         full_name: fullName,
+        role,
+        phone,
+        active: true,
+      });
+
+      saved = !error;
+    } catch {
+      saved = false;
+    }
+
+    if (!saved) {
+      try {
+        const { error } =
+          await admin.auth.admin.deleteUser(newId);
+
+        if (error) {
+          throw new Error("cleanup");
+        }
+      } catch {
+        console.error(
+          "Staff setup requires manual review for newly created user:",
+          newId,
+        );
+
+        return reply(
+          "Staff setup was incomplete and cleanup failed. Contact your administrator; do not retry yet.",
+          500,
+        );
+      }
+
+      return reply(
+        "Staff profile could not be saved. The new login account was removed. Contact your administrator.",
+        500,
+      );
+    }
+
+    return NextResponse.json(
+      {
+        message: "Staff account created successfully.",
+        userId: newId,
       },
-    });
-
-  if (accountError || !newAccount.user) {
-    return NextResponse.json(
-      { error: accountError?.message ?? "Could not create login account." },
-      { status: 400 },
+      {
+        status: 201,
+        headers: { "Cache-Control": "private, no-store" },
+      },
+    );
+  } catch {
+    return reply(
+      "Staff service is unavailable. Check Staff and Authentication before retrying.",
+      503,
     );
   }
-
-  const { error: profileError } = await supabaseAdmin
-    .from("profiles")
-    .insert({
-      id: newAccount.user.id,
-      business_id: administrator.business_id,
-      branch_id: branchId,
-      full_name: fullName,
-      role,
-      phone,
-      active: true,
-    });
-
-  if (profileError) {
-    await supabaseAdmin.auth.admin.deleteUser(newAccount.user.id);
-
-    return NextResponse.json(
-      { error: `Could not create staff profile: ${profileError.message}` },
-      { status: 400 },
-    );
-  }
-
-  return NextResponse.json(
-    {
-      message: "Staff account created successfully.",
-      userId: newAccount.user.id,
-    },
-    { status: 201 },
-  );
 }
