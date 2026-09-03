@@ -78,7 +78,48 @@ export async function proxy(request: NextRequest) {
       ? withCookies(response)
       : redirectTo("/login");
   }
+  const path = request.nextUrl.pathname;
+  const inArea = (area: string) =>
+    path === area || path.startsWith(`${area}/`);
 
+  const isPlatform =
+    inArea("/platform") || inArea("/api/platform");
+  const isApi = inArea("/api");
+
+  try {
+    const { data: isAdmin, error } =
+      await supabase.rpc("is_platform_admin");
+
+    if (error || typeof isAdmin !== "boolean") {
+      return unavailable();
+    }
+
+    if (isAdmin) {
+      if (isPlatform) return withCookies(response);
+
+      if (isApi || !["GET", "HEAD"].includes(request.method)) {
+        return withCookies(
+          NextResponse.json(
+            { error: "Forbidden" },
+            { status: 403 },
+          ),
+        );
+      }
+
+      return redirectTo("/platform");
+    }
+
+    if (isPlatform) {
+      return withCookies(
+        NextResponse.json(
+          { error: "Platform administrator access required" },
+          { status: 403 },
+        ),
+      );
+    }
+  } catch {
+    return unavailable();
+  }
   // Database migration 014 rejects inactive or missing staff profiles.
   try {
     const { data: businessId, error } =
@@ -114,6 +155,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+        "/platform/:path*",
+    "/api/:path*",
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
