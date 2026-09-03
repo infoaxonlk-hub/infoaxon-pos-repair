@@ -24,3 +24,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Tenant-scoped accents. Platform pages and semantic red/green states are unchanged. */
+.business-theme { color-scheme: light; }
+.brand-banner {
+  background: linear-gradient(100deg, var(--brand-primary, #1d4ed8), var(--brand-accent, #2563eb));
+  color: var(--brand-foreground, #ffffff);
+}
+.business-theme :is(.bg-blue-600, .bg-blue-700) {
+  background-color: var(--brand-primary);
+  color: var(--brand-foreground);
+}
+.business-theme :is(.hover\:bg-blue-700:hover, .hover\:bg-blue-600:hover) {
+  background-color: var(--brand-accent);
+  color: var(--brand-foreground);
+}
+.business-theme :is(.text-blue-600, .text-blue-700) { color: var(--brand-link); }
+.business-theme :is(.bg-blue-50, .bg-blue-100) {
+  background-color: color-mix(in srgb, var(--brand-primary) 10%, white);
+}
+.business-theme .bg-blue-600.text-white { color: var(--brand-foreground); }
