@@ -12,6 +12,9 @@ import { LoginForm } from "./login-form";
 type LoginPageProps = {
   searchParams: Promise<{
     error?: string;
+    email?: string;
+    business?: string;
+    role?: string;
   }>;
 };
 
@@ -36,7 +39,10 @@ const features = [
 export default async function LoginPage({
   searchParams,
 }: LoginPageProps) {
-  const { error } = await searchParams;
+  const { error, email = "", business = "", role = "" } = await searchParams;
+  const safeEmail = email.length <= 254 ? email : "";
+  const safeBusiness = business.length <= 120 ? business : "";
+  const safeRole = role.length <= 40 ? role : "";
 
   return (
     <main className="min-h-screen bg-slate-950">
@@ -126,8 +132,14 @@ export default async function LoginPage({
                 </h2>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Enter your account details to access the management system.
+                  Use your own email and password. The system identifies your role and opens the correct workspace automatically.
                 </p>
+                {(safeBusiness || safeRole) && (
+                  <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                    <p className="font-semibold">{safeBusiness || "Business access"}</p>
+                    <p className="mt-1">Signing in as: {safeRole || "Authorized user"}</p>
+                  </div>
+                )}
               </div>
 
               {error && (
@@ -136,7 +148,14 @@ export default async function LoginPage({
                 </div>
               )}
 
-              <LoginForm />
+              <LoginForm defaultEmail={safeEmail} />
+
+              <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs leading-5 text-slate-600">
+                <p><strong>Client Admin / Manager:</strong> Business Dashboard</p>
+                <p><strong>Cashier:</strong> POS Billing</p>
+                <p><strong>Technician:</strong> Repair Jobs</p>
+                <p><strong>Platform Admin:</strong> Client Businesses</p>
+              </div>
 
               <div className="mt-7 flex items-center justify-center gap-2 border-t border-slate-100 pt-6 text-xs text-slate-500">
                 <CheckCircle2 size={15} className="text-emerald-500" />

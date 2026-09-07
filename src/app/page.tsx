@@ -68,7 +68,7 @@ export default async function Home() {
             </details>
             <div className="min-w-0"><h2 className="break-words text-xl font-bold">{name}</h2><p className="mt-1 text-sm text-slate-500">Business dashboard · {date}</p></div>
           </div>
-          <div className="flex items-center gap-3"><LogoutButton /><span aria-label={fullName} className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">{initials}</span></div>
+          <div className="flex flex-wrap items-center justify-end gap-3"><div className="rounded-xl bg-slate-100 px-3 py-2 text-right"><p className="text-sm font-semibold">{fullName}</p><p className="text-xs capitalize text-slate-500">{brand?.role ?? "administrator"} · {brand?.branch_name ?? "All branches"}</p></div><LogoutButton label="Switch account" /><span aria-label={fullName} className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">{initials}</span></div>
         </header>
         <div className="p-4 sm:p-8">
           <section className="brand-banner mb-8 flex flex-col justify-between gap-5 rounded-2xl p-6 sm:flex-row sm:items-center">

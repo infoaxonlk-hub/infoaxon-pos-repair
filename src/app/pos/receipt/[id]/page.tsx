@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Printer } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -62,6 +62,7 @@ export default function PosReceiptPage() {
   const [customer, setCustomer] = useState<NamedRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const autoPrintStarted = useRef(false);
 
   useEffect(() => {
     async function loadReceipt() {
@@ -123,6 +124,14 @@ export default function PosReceiptPage() {
 
     if (params.id) loadReceipt();
   }, [params.id]);
+
+  useEffect(() => {
+    if (loading || !sale || autoPrintStarted.current) return;
+    if (new URLSearchParams(window.location.search).get("autoprint") !== "1") return;
+    autoPrintStarted.current = true;
+    const timer = window.setTimeout(() => window.print(), 400);
+    return () => window.clearTimeout(timer);
+  }, [loading, sale]);
 
   const methodName = (id: string) => methods.find((method) => method.id === id)?.name || "Payment";
 

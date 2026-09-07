@@ -172,6 +172,22 @@ export async function proxy(request: NextRequest) {
     return redirectTo("/");
   }
 
+  try {
+    const { data: role, error } = await supabase.rpc("current_user_role");
+    if (error || !role) return unavailable();
+    if (role === "cashier" && !inArea("/pos")) {
+      if (isApi || !["GET", "HEAD"].includes(request.method)) {
+        return withCookies(NextResponse.json({ error: "Cashier access is limited to POS billing" }, { status: 403 }));
+      }
+      return redirectTo("/pos");
+    }
+    if (role === "technician" && path === "/") {
+      return redirectTo("/repairs");
+    }
+  } catch {
+    return unavailable();
+  }
+
   const requiredModule = routeModule(path);
   if (requiredModule) {
     try {
