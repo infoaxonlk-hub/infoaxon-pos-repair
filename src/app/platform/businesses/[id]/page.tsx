@@ -22,7 +22,7 @@ export default async function BusinessSettings({ params, searchParams }: {
       <div className="mx-auto max-w-6xl">
         <a href="/platform" className="font-semibold text-indigo-700">← Back to businesses</a>
         <h1 className="mt-5 text-3xl font-bold">Business settings</h1>
-        <div className="mt-4 flex flex-wrap gap-3"><a href={`/platform/businesses/${id}/modules`} className="inline-block rounded-xl bg-indigo-700 px-4 py-3 font-semibold text-white">Manage modules</a><a href={`/platform/businesses/${id}/subscription`} className="inline-block rounded-xl border border-indigo-700 px-4 py-3 font-semibold text-indigo-700">Subscription &amp; licence</a></div>
+        <div className="mt-4 flex flex-wrap gap-3"><a href={`/platform/businesses/${id}/modules`} className="inline-block rounded-xl bg-indigo-700 px-4 py-3 font-semibold text-white">Manage modules</a><a href={`/platform/businesses/${id}/subscription`} className="inline-block rounded-xl border border-indigo-700 px-4 py-3 font-semibold text-indigo-700">Subscription &amp; licence</a><a href={`/platform/businesses/${id}/branches`} className="inline-block rounded-xl border border-indigo-700 px-4 py-3 font-semibold text-indigo-700">Manage branches</a></div>
         <p className="mt-2 text-slate-600">Contact details, account status and branding.</p>
         {query.saved && ["details", "logo", "removed"].includes(query.saved) && <p role="status" className="mt-5 rounded-xl bg-emerald-100 p-4 text-emerald-900">Changes saved. Client pages show the latest branding after refresh.</p>}
         {error || !business ? <p role="alert" className="mt-5 rounded-xl bg-red-50 p-4 text-red-800">Unable to load business settings. Confirm migration 019 completed successfully, then refresh.</p> :
