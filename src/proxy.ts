@@ -94,6 +94,7 @@ export async function proxy(request: NextRequest) {
   const isPlatform =
     inArea("/platform") || inArea("/api/platform");
   const isApi = inArea("/api");
+  const isSubscriptionPage = path === "/subscription-required";
 
   try {
     const { data: isAdmin, error } =
@@ -126,6 +127,7 @@ export async function proxy(request: NextRequest) {
         ),
       );
     }
+    if (isSubscriptionPage) return withCookies(response);
   } catch {
     return unavailable();
   }
@@ -134,6 +136,12 @@ export async function proxy(request: NextRequest) {
     const { data: businessId, error } =
       await supabase.rpc("current_business_id");
 
+    if (error?.code === "P0001") {
+      if (isApi || !["GET", "HEAD"].includes(request.method)) {
+        return withCookies(NextResponse.json({ error: "Subscription access required" }, { status: 403 }));
+      }
+      return redirectTo("/subscription-required");
+    }
     if (error?.code === "42501") {
       await supabase.auth.signOut({ scope: "local" });
 

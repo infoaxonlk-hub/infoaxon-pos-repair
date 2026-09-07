@@ -31,6 +31,7 @@ async function createBusiness(form: FormData) {
 }
 
 type Business = { id: string; name: string; code: string; active: boolean };
+type SubscriptionOverview = { business_id: string; status: string; plan: string; ends_on: string | null };
 
 export default async function PlatformPage({ searchParams }: {
   searchParams: Promise<{ error?: string; created?: string }>;
@@ -39,6 +40,9 @@ export default async function PlatformPage({ searchParams }: {
   const query = await searchParams;
   const { data, error } = await supabase.rpc("platform_list_businesses");
   const businesses = (data ?? []) as Business[];
+  const subscriptionsResult = await supabase.rpc("platform_list_subscription_overview");
+  const subscriptions = (subscriptionsResult.data ?? []) as SubscriptionOverview[];
+  const subscriptionFor = (id: string) => subscriptions.find((item) => item.business_id === id);
   const messages: Record<string, string> = {
     invalid: "Name: 2–120 characters. Code: 2–30 letters, numbers, hyphens or underscores.",
     duplicate: "That business code already exists. Choose another code.",
@@ -78,12 +82,12 @@ export default async function PlatformPage({ searchParams }: {
         </section>
         <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold">All businesses</h2>
-          <p className="mt-2 text-sm text-slate-600">Use Manage for business details, logo and theme. Module selection is the next phase.</p>
+          <p className="mt-2 text-sm text-slate-600">Manage business details, branding, modules, client administrators and subscription access.</p>
           {error ? <p role="alert" className="mt-4 text-red-700">Could not load businesses. Confirm migration 018 was applied, then refresh.</p> : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead><tr className="border-b"><th scope="col" className="p-3">Business</th><th scope="col" className="p-3">Code</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Settings</th></tr></thead>
-                <tbody>{businesses.map((b) => <tr key={b.id} className="border-b"><td className="p-3">{b.name}</td><td className="p-3">{b.code}</td><td className="p-3">{b.active ? "Active" : "Inactive"}</td><td className="p-3"><a className="font-semibold text-indigo-700 underline" href={`/platform/businesses/${b.id}`} aria-label={`Manage ${b.name}`}>Manage</a></td></tr>)}</tbody>
+                <thead><tr className="border-b"><th scope="col" className="p-3">Business</th><th scope="col" className="p-3">Code</th><th scope="col" className="p-3">Business</th><th scope="col" className="p-3">Subscription</th><th scope="col" className="p-3">Settings</th></tr></thead>
+                <tbody>{businesses.map((b) => { const s = subscriptionFor(b.id); return <tr key={b.id} className="border-b"><td className="p-3">{b.name}</td><td className="p-3">{b.code}</td><td className="p-3">{b.active ? "Active" : "Inactive"}</td><td className="p-3 capitalize">{subscriptionsResult.error ? "Unavailable" : s ? `${s.plan} · ${s.status}${s.ends_on ? ` · ends ${s.ends_on}` : ""}` : "Not configured"}</td><td className="p-3"><a className="font-semibold text-indigo-700 underline" href={`/platform/businesses/${b.id}`} aria-label={`Manage ${b.name}`}>Manage</a></td></tr>; })}</tbody>
               </table>
               {businesses.length === 0 && <p className="py-4 text-slate-600">No businesses yet.</p>}
             </div>
