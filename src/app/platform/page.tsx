@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/app/logout-button";
+import type { PlatformSummary, SubscriptionAttention } from "@/lib/platform-dashboard";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Clients | InfoAxon Platform" };
@@ -41,6 +42,12 @@ export default async function PlatformPage({ searchParams }: {
   const { data, error } = await supabase.rpc("platform_list_businesses");
   const businesses = (data ?? []) as Business[];
   const subscriptionsResult = await supabase.rpc("platform_list_subscription_overview");
+  const [summaryResult, attentionResult] = await Promise.all([
+    supabase.rpc("platform_dashboard_summary"),
+    supabase.rpc("platform_subscription_attention"),
+  ]);
+  const summary = summaryResult.data as PlatformSummary | null;
+  const attention = (attentionResult.data ?? []) as SubscriptionAttention[];
   const subscriptions = (subscriptionsResult.data ?? []) as SubscriptionOverview[];
   const subscriptionFor = (id: string) => subscriptions.find((item) => item.business_id === id);
   const messages: Record<string, string> = {
@@ -52,7 +59,7 @@ export default async function PlatformPage({ searchParams }: {
 
   return (
     <main className="min-h-screen bg-slate-100 px-5 py-8 text-slate-900">
-      <div className="mx-auto max-w-5xl">
+      <div className="mx-auto max-w-7xl">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="font-bold text-indigo-700">INFOAXON</p>
@@ -68,6 +75,26 @@ export default async function PlatformPage({ searchParams }: {
         </header>
         {query.error && <p role="alert" className="mt-6 rounded-xl bg-red-100 p-4 text-red-900">{messages[query.error] ?? messages.save}</p>}
         {query.created === "1" && !query.error && <p role="status" className="mt-6 rounded-xl bg-emerald-100 p-4 text-emerald-900">Business and Main Branch created. Client login setup is still pending.</p>}
+        {summaryResult.error || !summary ? <p role="alert" className="mt-6 rounded-xl bg-red-100 p-4 text-red-900">Dashboard metrics are unavailable. Confirm migration 025 is applied.</p> : <>
+          <section aria-label="Platform summary" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Client businesses", summary.total_businesses, `${summary.active_businesses} active · ${summary.inactive_businesses} inactive`],
+              ["Subscriptions", summary.active_subscriptions + summary.trial_subscriptions, `${summary.trial_subscriptions} trial · ${summary.blocked_subscriptions} blocked`],
+              ["Monthly recurring fee", new Intl.NumberFormat("en-LK", { style: "currency", currency: "LKR", maximumFractionDigits: 0 }).format(summary.monthly_recurring_fee), "Active and trial accounts"],
+              ["Expiry alerts", summary.expiring_30_days, `${summary.expiring_7_days} within 7 days`],
+              ["Active branches", summary.active_branches, "Across all client businesses"],
+              ["Client administrators", summary.active_client_admins, "Active administrator accounts"],
+              ["Enabled modules", summary.enabled_modules, "Total active client entitlements"],
+              ["System status", summary.blocked_subscriptions ? "Attention" : "Healthy", summary.blocked_subscriptions ? "Review blocked subscriptions" : "No access blocks"],
+            ].map(([title, value, note]) => <article key={title} className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm font-medium text-slate-600">{title}</p><p className="mt-2 text-2xl font-bold">{value}</p><p className="mt-2 text-xs text-slate-500">{note}</p></article>)}
+          </section>
+          <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-semibold">Subscription attention</h2><p className="mt-1 text-sm text-slate-600">Blocked, expired or expiring within 30 days.</p></div></div>
+            {attentionResult.error ? <p role="alert" className="mt-4 text-red-700">Could not load subscription alerts.</p> : attention.length ? <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead><tr className="border-b"><th className="p-3">Business</th><th className="p-3">Plan</th><th className="p-3">Status</th><th className="p-3">End date</th><th className="p-3">Time remaining</th><th className="p-3">Action</th></tr></thead><tbody>
+              {attention.map(item => <tr key={item.business_id} className="border-b"><td className="p-3"><span className="font-semibold">{item.business_name}</span><br/><span className="text-xs text-slate-500">{item.business_code}</span></td><td className="p-3 capitalize">{item.plan}</td><td className="p-3 capitalize">{item.status.replace("_"," ")}</td><td className="p-3">{item.ends_on ?? "No end date"}</td><td className={`p-3 font-semibold ${(item.days_remaining ?? 1) < 0 ? "text-red-700" : (item.days_remaining ?? 31) <= 7 ? "text-amber-700" : ""}`}>{item.days_remaining === null ? "Review access" : item.days_remaining < 0 ? `${Math.abs(item.days_remaining)} days overdue` : item.days_remaining === 0 ? "Expires today" : `${item.days_remaining} days`}</td><td className="p-3"><a href={`/platform/businesses/${item.business_id}/subscription`} className="font-semibold text-indigo-700 underline">Review</a></td></tr>)}
+            </tbody></table></div> : <p className="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-900">No subscriptions need attention.</p>}
+          </section>
+        </>}
         <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="text-xl font-semibold">Add a business</h2>
           <form action={createBusiness} className="mt-5 grid gap-4 sm:grid-cols-2">
