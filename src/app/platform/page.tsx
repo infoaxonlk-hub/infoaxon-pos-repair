@@ -62,6 +62,7 @@ export default async function PlatformPage({ searchParams }: {
           <div className="flex flex-wrap items-center gap-3">
             <a href="/platform/admins/new" className="rounded-xl bg-indigo-700 px-4 py-3 font-semibold text-white">Create Client Admin</a>
             <a href="/platform/admins" className="rounded-xl border border-indigo-700 px-4 py-3 font-semibold text-indigo-700">Manage Client Admins</a>
+            <a href="/platform/audit" className="rounded-xl border border-indigo-700 px-4 py-3 font-semibold text-indigo-700">Audit log</a>
             <LogoutButton />
           </div>
         </header>
