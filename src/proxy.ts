@@ -1,8 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isModuleList, routeModule } from "@/lib/modules";
+import { publicSupabaseEnv } from "@/lib/env";
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/api/health") {
+    return NextResponse.next({ request });
+  }
   // Public recovery form verifies a single-use recovery token itself.
   if (request.nextUrl.pathname === "/reset-password") {
     const recovery = NextResponse.next({ request });
@@ -12,10 +16,11 @@ export async function proxy(request: NextRequest) {
     return recovery;
   }
   let response = NextResponse.next({ request });
+  const { url, publishableKey } = publicSupabaseEnv();
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    url,
+    publishableKey,
     {
       cookies: {
         getAll() {
