@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/app/logout-button";
 import type { PlatformSummary, SubscriptionAttention } from "@/lib/platform-dashboard";
+import type { ReadinessOverview } from "@/lib/readiness";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Clients | InfoAxon Platform" };
@@ -42,14 +43,17 @@ export default async function PlatformPage({ searchParams }: {
   const { data, error } = await supabase.rpc("platform_list_businesses");
   const businesses = (data ?? []) as Business[];
   const subscriptionsResult = await supabase.rpc("platform_list_subscription_overview");
-  const [summaryResult, attentionResult] = await Promise.all([
+  const [summaryResult, attentionResult, readinessResult] = await Promise.all([
     supabase.rpc("platform_dashboard_summary"),
     supabase.rpc("platform_subscription_attention"),
+    supabase.rpc("platform_readiness_overview"),
   ]);
   const summary = summaryResult.data as PlatformSummary | null;
   const attention = (attentionResult.data ?? []) as SubscriptionAttention[];
   const subscriptions = (subscriptionsResult.data ?? []) as SubscriptionOverview[];
+  const readiness = (readinessResult.data ?? []) as ReadinessOverview[];
   const subscriptionFor = (id: string) => subscriptions.find((item) => item.business_id === id);
+  const readinessFor = (id: string) => readiness.find((item) => item.business_id === id);
   const messages: Record<string, string> = {
     invalid: "Name: 2–120 characters. Code: 2–30 letters, numbers, hyphens or underscores.",
     duplicate: "That business code already exists. Choose another code.",
@@ -114,8 +118,8 @@ export default async function PlatformPage({ searchParams }: {
           {error ? <p role="alert" className="mt-4 text-red-700">Could not load businesses. Confirm migration 018 was applied, then refresh.</p> : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead><tr className="border-b"><th scope="col" className="p-3">Business</th><th scope="col" className="p-3">Code</th><th scope="col" className="p-3">Business</th><th scope="col" className="p-3">Subscription</th><th scope="col" className="p-3">Settings</th></tr></thead>
-                <tbody>{businesses.map((b) => { const s = subscriptionFor(b.id); return <tr key={b.id} className="border-b"><td className="p-3">{b.name}</td><td className="p-3">{b.code}</td><td className="p-3">{b.active ? "Active" : "Inactive"}</td><td className="p-3 capitalize">{subscriptionsResult.error ? "Unavailable" : s ? `${s.plan} · ${s.status}${s.ends_on ? ` · ends ${s.ends_on}` : ""}` : "Not configured"}</td><td className="p-3"><a className="font-semibold text-indigo-700 underline" href={`/platform/businesses/${b.id}`} aria-label={`Manage ${b.name}`}>Manage</a></td></tr>; })}</tbody>
+                <thead><tr className="border-b"><th scope="col" className="p-3">Business</th><th scope="col" className="p-3">Code</th><th scope="col" className="p-3">Business</th><th scope="col" className="p-3">Subscription</th><th scope="col" className="p-3">Onboarding</th><th scope="col" className="p-3">Settings</th></tr></thead>
+                <tbody>{businesses.map((b) => { const s = subscriptionFor(b.id); const r = readinessFor(b.id); return <tr key={b.id} className="border-b"><td className="p-3">{b.name}</td><td className="p-3">{b.code}</td><td className="p-3">{b.active ? "Active" : "Inactive"}</td><td className="p-3 capitalize">{subscriptionsResult.error ? "Unavailable" : s ? `${s.plan} · ${s.status}${s.ends_on ? ` · ends ${s.ends_on}` : ""}` : "Not configured"}</td><td className="p-3">{readinessResult.error ? "Unavailable" : r ? <a className={`font-semibold underline ${r.ready ? "text-emerald-700" : "text-amber-700"}`} href={`/platform/businesses/${b.id}/readiness`}>{r.ready ? "Ready" : `${r.completed_steps}/${r.total_steps} complete`}</a> : "Pending"}</td><td className="p-3"><a className="font-semibold text-indigo-700 underline" href={`/platform/businesses/${b.id}`} aria-label={`Manage ${b.name}`}>Manage</a></td></tr>; })}</tbody>
               </table>
               {businesses.length === 0 && <p className="py-4 text-slate-600">No businesses yet.</p>}
             </div>
