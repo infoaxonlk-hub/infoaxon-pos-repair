@@ -1,7 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isModuleList, routeModule } from "@/lib/modules";
 
 export async function proxy(request: NextRequest) {
+  // Public recovery form verifies a single-use recovery token itself.
+  if (request.nextUrl.pathname === "/reset-password") {
+    const recovery = NextResponse.next({ request });
+    recovery.headers.set("Cache-Control", "private, no-store");
+    recovery.headers.set("Referrer-Policy", "no-referrer");
+    recovery.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return recovery;
+  }
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -150,11 +159,29 @@ export async function proxy(request: NextRequest) {
     return redirectTo("/");
   }
 
+  const requiredModule = routeModule(path);
+  if (requiredModule) {
+    try {
+      const { data, error } = await supabase.rpc("my_business_modules");
+      if (error || !isModuleList(data)) return unavailable();
+      if (!data.includes(requiredModule)) {
+        if (isApi || !["GET", "HEAD"].includes(request.method)) {
+          return withCookies(NextResponse.json({ error: "Module not enabled" }, { status: 403 }));
+        }
+        return redirectTo("/module-unavailable");
+      }
+    } catch {
+      return unavailable();
+    }
+  }
+
   return withCookies(response);
 }
 
 export const config = {
   matcher: [
+    "/pos/:path*", "/repairs/:path*", "/inventory/:path*",
+    "/purchases/:path*", "/expenses/:path*", "/accounting/:path*", "/reports/:path*",
         "/platform/:path*",
     "/api/:path*",
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
