@@ -1,39 +1,23 @@
-"use client";
-
 import { LogIn } from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { switchToClientLogin } from "@/app/platform/admins/switch-actions";
 
 export function SwitchAccountButton({
-  email,
+  businessId,
+  adminId,
   business,
 }: {
-  email: string;
+  businessId: string;
+  adminId: string;
   business: string;
 }) {
-  const router = useRouter();
-  const [switching, setSwitching] = useState(false);
-
-  async function switchAccount() {
-    if (switching) return;
-    setSwitching(true);
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    const query = new URLSearchParams({ email, business, role: "Client Admin" });
-    router.push(`/login?${query.toString()}`);
-    router.refresh();
-  }
-
   return (
-    <button
-      type="button"
-      onClick={switchAccount}
-      disabled={switching}
-      className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-4 py-3 font-semibold text-white disabled:opacity-60"
-    >
-      <LogIn size={18} />
-      {switching ? "Opening login…" : "Login to client system"}
-    </button>
+    <form action={switchToClientLogin} className="mt-4">
+      <input type="hidden" name="businessId" value={businessId}/>
+      <input type="hidden" name="adminId" value={adminId}/>
+      <input type="hidden" name="businessName" value={business}/>
+      <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-4 py-3 font-semibold text-white">
+        <LogIn size={18}/> Login to client system
+      </button>
+    </form>
   );
 }

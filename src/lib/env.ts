@@ -2,15 +2,23 @@ type RequiredPublicEnv =
   | "NEXT_PUBLIC_SUPABASE_URL"
   | "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY";
 
-function required(name: RequiredPublicEnv) {
-  const value = process.env[name]?.trim();
+function required(name: RequiredPublicEnv, rawValue: string | undefined) {
+  const value = rawValue?.trim();
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
   return value;
 }
 
 export function publicSupabaseEnv() {
-  const url = required("NEXT_PUBLIC_SUPABASE_URL");
-  const publishableKey = required("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+  // NEXT_PUBLIC variables must be referenced statically so Next.js can inline
+  // them into Client Component bundles at build time.
+  const url = required(
+    "NEXT_PUBLIC_SUPABASE_URL",
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+  );
+  const publishableKey = required(
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  );
 
   try {
     const parsed = new URL(url);

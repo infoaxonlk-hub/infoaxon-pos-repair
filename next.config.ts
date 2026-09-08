@@ -9,6 +9,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "localhost:3000",
+        "effective-disco-77pp69wq9rxg3p6jj-3000.app.github.dev",
+        "*.app.github.dev",
+      ],
+    },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -1,50 +1,27 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useFormStatus } from "react-dom";
+import { login } from "./actions";
 
-export function LoginForm({ defaultEmail = "" }: { defaultEmail?: string }) {
-  const router = useRouter();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+function SubmitButton({ label }: { label: string }) {
+  const { pending } = useFormStatus();
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    setLoading(true);
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-3.5 font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {pending ? "Signing in..." : label}
+    </button>
+  );
+}
 
-    const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
-    const password = String(formData.get("password") ?? "");
-
-    const supabase = createClient();
-
-    const { error: loginError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-    if (loginError) {
-      setError(loginError.message);
-      setLoading(false);
-      return;
-    }
-
-    router.push("/");
-    router.refresh();
-  }
+export function LoginForm({ defaultEmail = "", buttonLabel = "Sign in to system" }: { defaultEmail?: string; buttonLabel?: string }) {
 
   return (
     <>
-      {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form action={login} className="space-y-5">
         <div>
           <label
             htmlFor="email"
@@ -90,13 +67,7 @@ export function LoginForm({ defaultEmail = "" }: { defaultEmail?: string }) {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-3.5 font-semibold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? "Signing in..." : "Sign in to system"}
-        </button>
+        <SubmitButton label={buttonLabel} />
       </form>
     </>
   );

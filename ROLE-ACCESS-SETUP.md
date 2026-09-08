@@ -1,13 +1,13 @@
 # Role access and account switching
 
-All users sign in from `/login`. The application identifies the authenticated account and opens the correct workspace automatically.
+All users sign in from `/login`. The page presents separate choices for InfoAxon Admin, Business Owner/Admin and Business Staff. The authenticated account still determines the permitted role and workspace.
 
 - Platform administrators open `/platform`.
 - Client administrators and managers open the business dashboard at `/`.
 - Cashiers are limited to `/pos`.
 - Technicians entering `/` are sent to `/repairs`.
 
-From the platform business list, choose **Open client**, then **Login to client system** beside the intended active client administrator. This securely signs out the platform session and opens the normal login form with that administrator email filled in. The password is never stored, displayed or transferred.
+From the platform business list, choose **Open client**, then **Login to client system** beside the intended active client administrator. A verified server action securely signs out the platform session and opens the Business Owner/Admin login with that administrator email filled in. The password is never stored, displayed or transferred.
 
 The business dashboard header displays the current user, role and branch. **Switch account** signs out and returns to the login page.
 
