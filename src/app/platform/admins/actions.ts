@@ -34,6 +34,33 @@ export async function manageAdmin(form: FormData) {
     } catch {result="email_failed";}
    }
   }
+ } else if(operation==="set_password") {
+  const password=String(form.get("password")??"");
+  const confirmation=String(form.get("confirmation")??"");
+  if(password.length<12||password.length>128||password!==confirmation) result="password_invalid";
+  else {
+   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
+   const secret=process.env.SUPABASE_SECRET_KEY;
+   if(!url||!secret) result="config";
+   else {
+    const [{data:businesses,error:businessError},{data:admins,error:adminError}]=await Promise.all([
+     client.rpc("platform_list_businesses"),
+     client.rpc("platform_list_client_admins",{p_business:business}),
+    ]);
+    const businessAllowed=!businessError&&Array.isArray(businesses)&&businesses.some((item:unknown)=>{
+     const row=item as {id?:unknown};return row.id===business;
+    });
+    const targetAllowed=!adminError&&Array.isArray(admins)&&admins.some((item:unknown)=>{
+     const row=item as {id?:unknown};return row.id===target;
+    });
+    if(!businessAllowed||!targetAllowed) result="invalid";
+    else {
+     const admin=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+     const {error}=await admin.auth.admin.updateUserById(target,{password});
+     result=error?error.code==="weak_password"?"password_invalid":"password_failed":"password_saved";
+    }
+   }
+  }
  }
  revalidatePath("/platform/admins");
  redirect(`/platform/admins?business=${encodeURIComponent(business)}&result=${result}`);
