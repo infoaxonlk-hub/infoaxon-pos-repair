@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, Building2, Pencil, Save, Settings, Store, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { StaffPasswordForm } from "./staff-password-form";
 
 type Business = { id:string; name:string; phone:string|null; email:string|null; address:string|null; currency_code:string; timezone:string };
 type Branch = { id:string; name:string; code:string; phone:string|null; address:string|null; active:boolean };
@@ -82,15 +83,24 @@ export default function SettingsPage() {
       <label className="mt-4 flex items-center gap-2"><input type="checkbox" checked={branchForm.active??true} onChange={e=>setBranchForm({...branchForm,active:e.target.checked})}/> Active</label>
       <button disabled={saving||role!=="admin"} className="mt-5 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white disabled:opacity-50">Save Branch</button>
     </form><section className="space-y-3">{branches.map(b=><article key={b.id} className="flex items-center justify-between rounded-2xl border bg-white p-5 shadow-sm"><div><h3 className="font-bold">{b.name}</h3><p className="text-sm text-slate-500">{b.code} · {b.active?"Active":"Inactive"}</p></div><button onClick={()=>setBranchForm(b)} className="rounded-lg border p-2"><Pencil size={18}/></button></article>)}</section></div>}
-
+{tab === "staff" && role === "admin" && (
+  <div className="mt-5 flex justify-end">
+    <Link
+      href="/settings/staff/new"
+      className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+    >
+      + Add Staff
+    </Link>
+  </div>
+)}
     {tab==="staff"&&<div className="mt-5 grid gap-5 lg:grid-cols-2"><section className="space-y-3">{staff.map(u=><article key={u.id} className="flex items-center justify-between rounded-2xl border bg-white p-5 shadow-sm"><div><h3 className="font-bold">{u.full_name}</h3><p className="text-sm capitalize text-slate-500">{u.role} · {u.active?"Active":"Inactive"}</p></div><button onClick={()=>setStaffForm(u)} className="rounded-lg border p-2"><Pencil size={18}/></button></article>)}</section>
-      {staffForm?<form onSubmit={saveStaff} className="rounded-2xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Edit Staff</h2>
+      {staffForm?<div className="rounded-2xl border bg-white p-6 shadow-sm"><form onSubmit={saveStaff}><h2 className="text-xl font-bold">Edit Staff</h2>
         <label className="mt-5 block font-semibold">Full Name<input className={field} value={staffForm.full_name} onChange={e=>setStaffForm({...staffForm,full_name:e.target.value})}/></label>
         <label className="mt-4 block font-semibold">Role<select className={field} value={staffForm.role} onChange={e=>setStaffForm({...staffForm,role:e.target.value as Staff["role"]})}>{["admin","manager","cashier","technician"].map(r=><option key={r} value={r}>{r}</option>)}</select></label>
         <label className="mt-4 block font-semibold">Branch<select className={field} value={staffForm.branch_id||""} onChange={e=>setStaffForm({...staffForm,branch_id:e.target.value||null})}><option value="">All branches</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
         <label className="mt-4 block font-semibold">Phone<input className={field} value={staffForm.phone||""} onChange={e=>setStaffForm({...staffForm,phone:e.target.value})}/></label>
         <label className="mt-4 flex items-center gap-2"><input type="checkbox" checked={staffForm.active} onChange={e=>setStaffForm({...staffForm,active:e.target.checked})}/> Active</label>
         <button disabled={saving||role!=="admin"} className="mt-5 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white disabled:opacity-50">Update Staff</button>
-      </form>:<div className="rounded-2xl border bg-white p-10 text-center text-slate-500">Select a staff member to edit.<p className="mt-2 text-xs">New login accounts are created from Supabase Authentication first.</p></div>}</div>}
+      </form>{staffForm.role!=="admin"&&<StaffPasswordForm staffId={staffForm.id}/>}</div>:<div className="rounded-2xl border bg-white p-10 text-center text-slate-500">Select a staff member to edit.<p className="mt-2 text-xs">Use Add Staff to create a login account.</p></div>}</div>}
   </div></main>;
 }

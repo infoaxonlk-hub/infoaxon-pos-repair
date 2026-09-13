@@ -5,13 +5,21 @@ import {
   LockKeyhole,
   ShieldCheck,
   Smartphone,
+  Building2,
+  UserCog,
+  Users,
   Wrench,
 } from "lucide-react";
+import Link from "next/link";
 import { LoginForm } from "./login-form";
 
 type LoginPageProps = {
   searchParams: Promise<{
     error?: string;
+    email?: string;
+    business?: string;
+    role?: string;
+    portal?: string;
   }>;
 };
 
@@ -36,7 +44,16 @@ const features = [
 export default async function LoginPage({
   searchParams,
 }: LoginPageProps) {
-  const { error } = await searchParams;
+  const { error, email = "", business = "", portal = "business" } = await searchParams;
+  const safeEmail = email.length <= 254 ? email : "";
+  const safeBusiness = business.length <= 120 ? business : "";
+  const selectedPortal = ["platform", "business", "staff"].includes(portal) ? portal : "business";
+  const portals = [
+    { id: "platform", title: "InfoAxon Admin", detail: "Manage clients, subscriptions and system health", icon: UserCog },
+    { id: "business", title: "Business Owner / Admin", detail: "Complete business dashboard and settings", icon: Building2 },
+    { id: "staff", title: "Business Staff", detail: "Manager, Cashier or Technician access", icon: Users },
+  ];
+  const selected = portals.find((item) => item.id === selectedPortal)!;
 
   return (
     <main className="min-h-screen bg-slate-950">
@@ -126,8 +143,14 @@ export default async function LoginPage({
                 </h2>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Enter your account details to access the management system.
+                  Use your own email and password. The system identifies your role and opens the correct workspace automatically.
                 </p>
+                {safeBusiness && (
+                  <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                    <p className="font-semibold">Client: {safeBusiness}</p>
+                    <p className="mt-1">Use the business administrator password to continue.</p>
+                  </div>
+                )}
               </div>
 
               {error && (
@@ -136,7 +159,26 @@ export default async function LoginPage({
                 </div>
               )}
 
-              <LoginForm />
+              <div className="mb-6 grid gap-3">
+                {portals.map((item) => {
+                  const Icon = item.icon;
+                  const active = item.id === selectedPortal;
+                  return <Link key={item.id} href={`/login?portal=${item.id}`} className={`flex items-start gap-3 rounded-xl border p-4 transition ${active ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100" : "border-slate-200 hover:border-blue-300"}`}>
+                    <span className={`rounded-lg p-2 ${active ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"}`}><Icon size={20}/></span>
+                    <span><strong className="block text-sm text-slate-900">{item.title}</strong><span className="mt-1 block text-xs leading-5 text-slate-500">{item.detail}</span></span>
+                  </Link>;
+                })}
+              </div>
+              <div className="mb-4 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white">Selected login: <strong>{selected.title}</strong></div>
+              <LoginForm defaultEmail={safeEmail} buttonLabel={`Login as ${selected.title}`} />
+
+              <div className="mt-6 rounded-xl bg-slate-50 p-4 text-xs leading-5 text-slate-600">
+                <p><strong>Business Owner / Admin:</strong> Complete Business Dashboard</p>
+                <p><strong>Manager:</strong> Business Dashboard</p>
+                <p><strong>Cashier:</strong> POS Billing</p>
+                <p><strong>Technician:</strong> Repair Jobs</p>
+                <p><strong>Platform Admin:</strong> Client Businesses</p>
+              </div>
 
               <div className="mt-7 flex items-center justify-center gap-2 border-t border-slate-100 pt-6 text-xs text-slate-500">
                 <CheckCircle2 size={15} className="text-emerald-500" />

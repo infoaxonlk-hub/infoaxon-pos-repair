@@ -1,0 +1,3 @@
+import {LogoutButton} from "@/app/logout-button";
+export const metadata={title:"Subscription Required | InfoAxon"};
+export default function Page(){return <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6 text-slate-900"><section className="max-w-xl rounded-2xl bg-white p-8 text-center shadow-sm"><h1 className="text-3xl font-bold">Subscription access unavailable</h1><p className="my-4 text-slate-600">Your business subscription is not currently active or is outside its access dates. No business data has been deleted. Contact your InfoAxon administrator.</p><LogoutButton/></section></main>}

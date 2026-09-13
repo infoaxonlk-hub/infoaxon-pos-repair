@@ -11,7 +11,6 @@ import {
   Package,
   Pause,
   Plus,
-  Printer,
   Search,
   ShoppingCart,
   Trash2,
@@ -73,11 +72,6 @@ export default function PosPage() {
   const [paymentMethodId, setPaymentMethodId] = useState("");
   const [tendered, setTendered] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
-  const [lastReceipt, setLastReceipt] = useState<{
-    number: string;
-    total: number;
-    lines: CartLine[];
-  } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -300,16 +294,16 @@ export default function PosPage() {
       return;
     }
 
-    const receiptLines = [...cart];
+    if (!hold) {
+      window.location.href = `/pos/receipt/${data}?autoprint=1`;
+      return;
+    }
     setCart([]);
     setBillDiscount(0);
     setCustomerId("");
     setTendered("");
     setPaymentReference("");
     setShowPayment(false);
-    if (!hold) {
-      setLastReceipt({ number: String(data).slice(0, 8).toUpperCase(), total: totals.total, lines: receiptLines });
-    }
     await load();
     setWorking(false);
   }
@@ -476,16 +470,6 @@ export default function PosPage() {
         </div>
       )}
 
-      {lastReceipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="text-center"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><Printer /></div><h2 className="mt-3 text-2xl font-bold">Sale Completed</h2><p className="text-slate-500">Receipt #{lastReceipt.number}</p></div>
-            <div className="mt-5 max-h-52 space-y-2 overflow-y-auto border-y py-4 text-sm">{lastReceipt.lines.map((line) => <div key={line.id} className="flex justify-between gap-4"><span>{line.name} × {line.quantity}</span><span>{money(line.quantity*line.selling_price*(1-line.discountPercent/100))}</span></div>)}</div>
-            <div className="mt-4 flex justify-between text-xl font-bold"><span>Total</span><span>{money(lastReceipt.total)}</span></div>
-            <div className="mt-5 grid grid-cols-2 gap-2"><button onClick={() => window.print()} className="flex h-11 items-center justify-center gap-2 rounded-xl border font-semibold"><Printer size={18} />Print</button><button onClick={() => setLastReceipt(null)} className="h-11 rounded-xl bg-blue-600 font-bold text-white">New Sale</button></div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
